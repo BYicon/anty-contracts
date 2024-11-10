@@ -41,7 +41,7 @@ contract MirrorCoinMarket {
         bytes calldata data
     ) external returns (bytes4) {
         require(msg.sender == address(erc721), "invalid sender");
-        require(!Listings[tokenId].isListed, "token is already listed");  // 防止重复上架
+        require(!Listings[tokenId].isListed, "token is already listed");
         uint price = data.toUint256(0);
         require(price > 0, "price is zero");
         Listings[tokenId] = Listing(tokenId, from, price, true);
@@ -49,7 +49,7 @@ contract MirrorCoinMarket {
         return MAGIC_ON_ERC721_RECEIVED;
     }
 
-    // 购买
+    // 购买 
     function buy(uint tokenId) external {
         Listing memory listing = Listings[tokenId];
         require(listing.isListed, "not listed");
