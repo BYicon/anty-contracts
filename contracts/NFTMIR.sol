@@ -5,14 +5,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "./interfaces/INFTMIR.sol";
 
-contract NFTMIR is ERC721, ERC721Enumerable, Ownable {
+contract NFTMIR is ERC721, ERC721Enumerable, Ownable, INFTMIR {
+
     uint256 private _nextTokenId;
-    string private name;
-    string private symbol;
-    string private baseURI;
-
+    
     constructor(address initialOwner)
         ERC721("NFTMIR", "NFTMIR")
         Ownable(initialOwner)
