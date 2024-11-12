@@ -15,12 +15,6 @@ contract NFTMIR is
     Ownable,
     INFTMIR
 {
-    event Recharge(
-        address indexed user,
-        uint indexed userid,
-        uint amount
-    );
-    event Withdraw(uint amount);
 
     uint private unlocked = 1;
     modifier lock() {
@@ -59,9 +53,8 @@ contract NFTMIR is
             // 铸造NFT
             uint256 tokenId = _nextTokenId++;
             _safeMint(msg.sender, tokenId);
-            _setTokenURI(tokenId, uri);
-            
-        };
+            _setTokenURI(tokenId, uri);  
+        }
         emit Recharge(msg.sender, userid, msg.value);
     }
 

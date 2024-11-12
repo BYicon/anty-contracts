@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "./utils/Utils.sol";
+import "./libraries/Utils.sol";
 
 // 0000000000000000000000000000000000000000000000000001c6bf52634000
 
