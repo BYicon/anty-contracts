@@ -15,9 +15,20 @@ contract NFTMIR is
     Ownable,
     INFTMIR
 {
-
-    event Recharge(address indexed user, uint indexed userid, uint amount, uint tokenId);
+    event Recharge(
+        address indexed user,
+        uint indexed userid,
+        uint amount
+    );
     event Withdraw(uint amount);
+
+    uint private unlocked = 1;
+    modifier lock() {
+        require(unlocked == 1, "UniswapV2: LOCKED");
+        unlocked = 0;
+        _;
+        unlocked = 1;
+    }
 
     uint256 private _nextTokenId;
     mapping(address => mapping(uint => uint)) public totalRecharge;
@@ -44,25 +55,30 @@ contract NFTMIR is
     function recharge(uint userid, string memory uri) external payable lock {
         require(msg.value > 0, "Amount must be greater than 0");
         totalRecharge[msg.sender][userid] += msg.value;
-        if(getTotalRecharge(msg.sender, userid) >= 10 ** 15) {
+        if (getTotalRecharge(msg.sender, userid) >= 10 ** 15) {
             // 铸造NFT
             uint256 tokenId = _nextTokenId++;
             _safeMint(msg.sender, tokenId);
             _setTokenURI(tokenId, uri);
-        }
-        emit Recharge(msg.sender, userid, msg.value, tokenId);
+            
+        };
+        emit Recharge(msg.sender, userid, msg.value);
     }
 
     // 获取用户充值总额
-    function getTotalRecharge(address user, uint userid) external view returns (uint256) {
+    function getTotalRecharge(
+        address user,
+        uint userid
+    ) public view returns (uint256) {
         return totalRecharge[user][userid];
     }
 
     // 提现
-    function withdraw(uint amount) external onlyOwner{
+    function withdraw(uint amount) external onlyOwner {
+        require(amount <= address(this).balance, "Insufficient balance");
+        payable(owner()).transfer(amount);
         emit Withdraw(amount);
     }
-
 
     // 更新NFT
     function _update(
