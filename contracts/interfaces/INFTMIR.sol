@@ -2,6 +2,15 @@
 pragma solidity ^0.8.20;
 
 interface INFTMIR {
-    function safeMint(address to) external;
-    // function safeMint(address to, string memory uri) external;
+    event Recharge(address indexed user, uint indexed userid, uint amount);
+    event Withdraw(address indexed user, uint amount);
+
+    // 获取用户充值总额
+    function getTotalRecharge(address user,uint userid) external view returns (uint256);
+    // 用户充值 
+    function recharge(uint userid, string memory uri) external payable;
+    // 铸造NFT
+    function safeMint(address to, string memory uri) external;
+    // 提现
+    function withdraw(uint amount) external;
 }
