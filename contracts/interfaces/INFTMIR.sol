@@ -12,5 +12,5 @@ interface INFTMIR {
     // 铸造NFT
     function safeMint(address to, string memory uri) external;
     // 提现
-    function withdraw(uint amount) external;
+    function withdraw() external;
 }

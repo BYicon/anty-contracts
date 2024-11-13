@@ -16,49 +16,54 @@ contract NFTMIR is
     INFTMIR
 {
 
-    uint private unlocked = 1;
-    modifier lock() {
-        require(unlocked == 1, "UniswapV2: LOCKED");
-        unlocked = 0;
-        _;
-        unlocked = 1;
-    }
-
-    uint256 private _nextTokenId;
+    uint256 public nextTokenId;
     mapping(address => mapping(uint => uint)) public totalRecharge;
+    mapping(address => mapping(uint => uint)) public availableForMint;
 
     constructor(
         address initialOwner
     ) ERC721("NFTMIR", "NFTMIR") Ownable(initialOwner) {}
 
-    // 获取NFT URI
+    // getNFT URI
     function tokenURI(
         uint256 tokenId
     ) public view override(ERC721URIStorage, ERC721) returns (string memory) {
         return super.tokenURI(tokenId);
     }
 
-    // 铸造NFT
+    // mint NFT
     function safeMint(address to, string memory uri) public onlyOwner {
-        uint256 tokenId = _nextTokenId++;
+        uint256 tokenId = nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
     }
 
-    // 用户充值
-    function recharge(uint userid, string memory uri) external payable lock {
+    // recharge
+    function recharge(uint userid, string memory uri) external payable {
         require(msg.value > 0, "Amount must be greater than 0");
+
+        // update total recharge amount of user
         totalRecharge[msg.sender][userid] += msg.value;
-        if (getTotalRecharge(msg.sender, userid) >= 10 ** 15) {
-            // 铸造NFT
-            uint256 tokenId = _nextTokenId++;
-            _safeMint(msg.sender, tokenId);
-            _setTokenURI(tokenId, uri);  
+
+        // calculate available for mint
+        availableForMint[msg.sender][userid] += msg.value;
+
+        // calculate mintable NFTS
+        uint256 mintableNFTs = availableForMint[msg.sender][userid] / (10 ** 15);
+
+        if (mintableNFTs > 0) {
+            for (uint256 i = 0; i < mintableNFTs; i++) {
+                uint256 tokenId = nextTokenId++;
+                _safeMint(msg.sender, tokenId);
+                _setTokenURI(tokenId, uri);
+            }
+            // update available for mint
+            availableForMint[msg.sender][userid] %= (10 ** 15);
         }
+
         emit Recharge(msg.sender, userid, msg.value);
     }
-
-    // 获取用户充值总额
+    // Get Total Recharge Amount
     function getTotalRecharge(
         address user,
         uint userid
@@ -66,14 +71,13 @@ contract NFTMIR is
         return totalRecharge[user][userid];
     }
 
-    // 提现
-    function withdraw(uint amount) external onlyOwner {
-        require(amount <= address(this).balance, "Insufficient balance");
-        payable(owner()).transfer(amount);
-        emit Withdraw(amount);
+    // Withdraw To Owner,TODO: after add staking reward (warn reentrancy)
+    function withdraw() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+        emit Withdraw(address(this).balance);
     }
 
-    // 更新NFT
+    // update NFT
     function _update(
         address to,
         uint256 tokenId,
@@ -82,7 +86,7 @@ contract NFTMIR is
         return super._update(to, tokenId, auth);
     }
 
-    // 增加余额
+    // increase balance
     function _increaseBalance(
         address account,
         uint128 value
@@ -90,7 +94,7 @@ contract NFTMIR is
         super._increaseBalance(account, value);
     }
 
-    // 支持接口
+    // support interface
     function supportsInterface(
         bytes4 interfaceId
     )
