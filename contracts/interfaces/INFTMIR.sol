@@ -8,7 +8,7 @@ interface INFTMIR {
     // 获取用户充值总额
     function getTotalRecharge(address user,uint userid) external view returns (uint256);
     // 用户充值 
-    function recharge(uint userid, string memory uri) external payable;
+    function recharge(uint userid, string memory uri, uint amount) external;
     // 铸造NFT
     function safeMint(address to, string memory uri) external;
     // 提现

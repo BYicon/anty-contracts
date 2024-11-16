@@ -2,6 +2,7 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -17,12 +18,18 @@ contract NFTMIR is
 {
 
     uint256 public nextTokenId;
+    IERC20 public usdt;
+    uint256 constant mintPrice = 10 * 10 ** 18;
+
     mapping(address => mapping(uint => uint)) public totalRecharge;
     mapping(address => mapping(uint => uint)) public availableForMint;
 
     constructor(
-        address initialOwner
-    ) ERC721("NFTMIR", "NFTMIR") Ownable(initialOwner) {}
+        address initialOwner,
+        address usdtAddress
+    ) ERC721("NFTMIR", "NFTMIR") Ownable(initialOwner) {
+        usdt = IERC20(usdtAddress);
+    }
 
     // getNFT URI
     function tokenURI(
@@ -39,17 +46,18 @@ contract NFTMIR is
     }
 
     // recharge
-    function recharge(uint userid, string memory uri) external payable {
-        require(msg.value > 0, "Amount must be greater than 0");
+    function recharge(uint userid, string memory uri, uint amount) external {
+        require(amount > 0 && usdt.balanceOf(msg.sender) >= amount, "invalid amount");
 
         // update total recharge amount of user
-        totalRecharge[msg.sender][userid] += msg.value;
-
+        totalRecharge[msg.sender][userid] += amount;
         // calculate available for mint
-        availableForMint[msg.sender][userid] += msg.value;
+        availableForMint[msg.sender][userid] += amount;
 
-        // calculate mintable NFTS
-        uint256 mintableNFTs = availableForMint[msg.sender][userid] / (10 ** 15);
+        usdt.transferFrom(msg.sender, address(this), amount);
+
+        // calculate mintable NFTS 
+        uint256 mintableNFTs = availableForMint[msg.sender][userid] / mintPrice;
 
         if (mintableNFTs > 0) {
             for (uint256 i = 0; i < mintableNFTs; i++) {
@@ -58,11 +66,12 @@ contract NFTMIR is
                 _setTokenURI(tokenId, uri);
             }
             // update available for mint
-            availableForMint[msg.sender][userid] %= (10 ** 15);
+            availableForMint[msg.sender][userid] %= mintPrice;
         }
 
-        emit Recharge(msg.sender, userid, msg.value);
+        emit Recharge(msg.sender, userid, amount);
     }
+
     // Get Total Recharge Amount
     function getTotalRecharge(
         address user,
