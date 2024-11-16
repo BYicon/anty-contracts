@@ -20,6 +20,7 @@ contract NFTMIR is
     uint256 public nextTokenId;
     IERC20 public usdt;
     uint256 constant mintPrice = 10 * 10 ** 18;
+    mapping(address => bool) public blacklist;
 
     mapping(address => mapping(uint => uint)) public totalRecharge;
     mapping(address => mapping(uint => uint)) public availableForMint;
@@ -47,6 +48,7 @@ contract NFTMIR is
 
     // recharge
     function recharge(uint userid, string memory uri, uint amount) external {
+        require(!blacklist[msg.sender], "user is in blacklist");
         require(amount > 0 && usdt.balanceOf(msg.sender) >= amount, "invalid amount");
 
         // update total recharge amount of user
@@ -84,6 +86,12 @@ contract NFTMIR is
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
         emit Withdraw(address(this).balance);
+    }
+
+    // set blacklist
+    function setBlacklist(address user, bool isBlacklist) external onlyOwner {
+        if(user == owner()) revert("owner can't be blacklisted");
+        blacklist[user] = isBlacklist;
     }
 
     // update NFT
