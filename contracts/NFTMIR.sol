@@ -22,8 +22,9 @@ contract NFTMIR is
     uint256 constant mintPrice = 10 * 10 ** 18;
     mapping(address => bool) public blacklist;
 
-    mapping(address => mapping(uint => uint)) public totalRecharge;
-    mapping(address => mapping(uint => uint)) public availableForMint;
+    mapping(uint => uint) public totalRechargeOfUserid;
+    mapping(address => uint) public totalRechargeOfAddress;
+    mapping(uint => uint) public availableForMint;
 
     constructor(
         address initialOwner,
@@ -46,40 +47,40 @@ contract NFTMIR is
         _setTokenURI(tokenId, uri);
     }
 
+    // set NFT URI
+    function setTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
+        _setTokenURI(tokenId, uri);
+    }
+
     // recharge
     function recharge(uint userid, string memory uri, uint amount) external {
         require(!blacklist[msg.sender], "user is in blacklist");
         require(amount > 0 && usdt.balanceOf(msg.sender) >= amount, "invalid amount");
 
-        // update total recharge amount of user
-        totalRecharge[msg.sender][userid] += amount;
+        // record total recharge amount of userid
+        totalRechargeOfUserid[userid] += amount;
+        // record total recharge amount of current address
+        totalRechargeOfAddress[msg.sender] += amount;
         // calculate available for mint
-        availableForMint[msg.sender][userid] += amount;
-
+        availableForMint[userid] += amount;
         usdt.transferFrom(msg.sender, address(this), amount);
 
         // calculate mintable NFTS 
-        uint256 mintableNFTs = availableForMint[msg.sender][userid] / mintPrice;
+        uint256 mintableNFTsCount = availableForMint[userid] / mintPrice;
+        uint[] memory mintableTokenIds = new uint[](mintableNFTsCount);
 
-        if (mintableNFTs > 0) {
+        if (mintableNFTsCount > 0) {
             for (uint256 i = 0; i < mintableNFTs; i++) {
                 uint256 tokenId = nextTokenId++;
                 _safeMint(msg.sender, tokenId);
                 _setTokenURI(tokenId, uri);
+                mintableTokenIds[i] = tokenId;
             }
             // update available for mint
-            availableForMint[msg.sender][userid] %= mintPrice;
+            availableForMint[userid] %= mintPrice;
         }
 
-        emit Recharge(msg.sender, userid, amount);
-    }
-
-    // Get Total Recharge Amount
-    function getTotalRecharge(
-        address user,
-        uint userid
-    ) public view returns (uint256) {
-        return totalRecharge[user][userid];
+        emit Recharge(userid, msg.sender, amount, mintableTokenIds);
     }
 
     // Withdraw To Owner,TODO: after add staking reward (warn reentrancy)

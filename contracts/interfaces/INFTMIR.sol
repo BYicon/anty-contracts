@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 interface INFTMIR {
-    event Recharge(address indexed user, uint indexed userid, uint indexed amount);
+    event Recharge(uint indexed userid,address indexed user, uint indexed amount, uint[] mintableTokenIds);
     event Withdraw(uint indexed amount);
 
     // 获取用户充值总额
