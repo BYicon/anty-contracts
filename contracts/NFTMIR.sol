@@ -17,11 +17,10 @@ contract NFTMIR is
     INFTMIR
 {
 
-    uint256 public nftTokenId;
+    uint16 public nftTokenId;
     IERC20 public usdt;
     uint256 constant mintPrice = 10 * 10 ** 18;
     mapping(address => bool) public blacklist;
-
     mapping(uint => uint) public totalRechargeOfUserid;
     mapping(address => uint) public totalRechargeOfAddress;
     mapping(address => uint) public availableForMint;
@@ -33,9 +32,8 @@ contract NFTMIR is
     }
 
     constructor(
-        address initialOwner,
         address usdtAddress
-    ) ERC721("NFTMIR", "NFTMIR") Ownable(initialOwner) {
+    ) ERC721("NFTMIR", "NFTMIR") Ownable(msg.sender) {
         usdt = IERC20(usdtAddress);
     }
 
@@ -67,7 +65,7 @@ contract NFTMIR is
         // mint NFT and record waiting for redeem
         uint[] memory mintableTokenIds = new uint[](mintableNFTsCount);
         if (mintableNFTsCount > 0) {
-            uint256 currentTokenId = nftTokenId;
+            uint16 currentTokenId = nftTokenId;
             for (uint256 i = 0; i < mintableNFTsCount; i++) {
                 currentTokenId++;
                 waitingForRedeem[msg.sender].push(currentTokenId); // record waiting for redeem
@@ -78,6 +76,11 @@ contract NFTMIR is
             availableForMint[msg.sender] %= mintPrice;
         }
         emit Recharge(userid, msg.sender, amount, mintableTokenIds);
+    }
+
+    // get user waiting for redeem
+    function getWaitingForRedeem(address user) public view returns (uint[] memory) {
+        return waitingForRedeem[user];
     }
 
     // user redeem
@@ -91,6 +94,7 @@ contract NFTMIR is
                     waitingForRedeemArray.pop();
                     _safeMint(msg.sender, tokenId);
                     _setTokenURI(tokenId, uri);
+                    emit Redeem(tokenId, waitingForRedeemArray);
                     break;
                 }
             }
