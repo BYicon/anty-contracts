@@ -17,14 +17,20 @@ contract NFTMIR is
     INFTMIR
 {
 
-    uint256 public nextTokenId;
+    uint256 public nftTokenId;
     IERC20 public usdt;
     uint256 constant mintPrice = 10 * 10 ** 18;
     mapping(address => bool) public blacklist;
 
     mapping(uint => uint) public totalRechargeOfUserid;
     mapping(address => uint) public totalRechargeOfAddress;
-    mapping(uint => uint) public availableForMint;
+    mapping(address => uint) public availableForMint;
+    mapping(address => uint256[]) public waitingForRedeem;
+
+    modifier onlyNotBlacklist() {
+        require(!blacklist[msg.sender], "invalid user");
+        _;
+    }
 
     constructor(
         address initialOwner,
@@ -40,47 +46,57 @@ contract NFTMIR is
         return super.tokenURI(tokenId);
     }
 
-    // mint NFT
-    function safeMint(address to, string memory uri) public onlyOwner {
-        uint256 tokenId = nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-    }
-
     // set NFT URI
     function setTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
         _setTokenURI(tokenId, uri);
     }
 
     // recharge
-    function recharge(uint userid, string memory uri, uint amount) external {
-        require(!blacklist[msg.sender], "user is in blacklist");
+    function recharge(uint userid, uint amount) external onlyNotBlacklist {
         require(amount > 0 && usdt.balanceOf(msg.sender) >= amount, "invalid amount");
-
         // record total recharge amount of userid
         totalRechargeOfUserid[userid] += amount;
         // record total recharge amount of current address
         totalRechargeOfAddress[msg.sender] += amount;
-        // calculate available for mint
-        availableForMint[userid] += amount;
+        // record available for mint
+        availableForMint[msg.sender] += amount;
+        // transfer USDT from user to owner
         usdt.transferFrom(msg.sender, address(this), amount);
-
-        // calculate mintable NFTS 
-        uint256 mintableNFTsCount = availableForMint[userid] / mintPrice;
+        // calculate mintable NFTs count
+        uint256 mintableNFTsCount = availableForMint[msg.sender] / mintPrice;
+        // mint NFT and record waiting for redeem
         uint[] memory mintableTokenIds = new uint[](mintableNFTsCount);
-
         if (mintableNFTsCount > 0) {
-            for (uint256 i = 0; i < mintableNFTs; i++) {
-                uint256 tokenId = nextTokenId++;
-                _safeMint(msg.sender, tokenId);
-                _setTokenURI(tokenId, uri);
-                mintableTokenIds[i] = tokenId;
+            uint256 currentTokenId = nftTokenId;
+            for (uint256 i = 0; i < mintableNFTsCount; i++) {
+                currentTokenId++;
+                waitingForRedeem[msg.sender].push(currentTokenId); // record waiting for redeem
+                mintableTokenIds[i] = currentTokenId;
             }
+            nftTokenId = currentTokenId;
             // update available for mint
-            availableForMint[userid] %= mintPrice;
+            availableForMint[msg.sender] %= mintPrice;
         }
-
         emit Recharge(userid, msg.sender, amount, mintableTokenIds);
+    }
+
+    // user redeem
+    function redeem(uint tokenId, string memory uri) external onlyNotBlacklist {
+        // remove from waiting for redeem
+        uint[] storage waitingForRedeemArray = waitingForRedeem[msg.sender];
+        if(waitingForRedeemArray.length > 0) {
+            for (uint256 i = 0; i < waitingForRedeemArray.length; i++) {
+                if (waitingForRedeemArray[i] == tokenId) {
+                    waitingForRedeemArray[i] = waitingForRedeemArray[waitingForRedeemArray.length - 1];
+                    waitingForRedeemArray.pop();
+                    _safeMint(msg.sender, tokenId);
+                    _setTokenURI(tokenId, uri);
+                    break;
+                }
+            }
+        } else {
+            revert("invalid tokenId");
+        }
     }
 
     // Withdraw To Owner,TODO: after add staking reward (warn reentrancy)
