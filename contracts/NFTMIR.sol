@@ -83,14 +83,24 @@ contract NFTMIR is
         return waitingForRedeem[user];
     }
 
+    function findWaitingForRedeemIndex(address user, uint tokenId) public view returns (int) {
+        uint[] storage waitingForRedeemArray = waitingForRedeem[user];
+        for (uint256 i = 0; i < waitingForRedeemArray.length; i++) {
+            if (waitingForRedeemArray[i] == tokenId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     // user redeem
     function redeem(uint tokenId, string memory uri) external onlyNotBlacklist {
         // remove from waiting for redeem
         uint[] storage waitingForRedeemArray = waitingForRedeem[msg.sender];
         if(waitingForRedeemArray.length > 0) {
-            for (uint256 i = 0; i < waitingForRedeemArray.length; i++) {
-                if (waitingForRedeemArray[i] == tokenId) {
-                    waitingForRedeemArray[i] = waitingForRedeemArray[waitingForRedeemArray.length - 1];
+            int index = findWaitingForRedeemIndex(msg.sender, tokenId);
+            if(index > -1) {
+                    waitingForRedeemArray[uint(index)] = waitingForRedeemArray[waitingForRedeemArray.length - 1];
                     waitingForRedeemArray.pop();
                     _safeMint(msg.sender, tokenId);
                     _setTokenURI(tokenId, uri);
