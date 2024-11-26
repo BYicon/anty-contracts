@@ -16,7 +16,6 @@ contract NFTMIR is
     Ownable,
     INFTMIR
 {
-
     uint16 public nftTokenId;
     IERC20 public usdt;
     uint256 constant mintPrice = 10 * 10 ** 18;
@@ -29,6 +28,11 @@ contract NFTMIR is
     modifier onlyNotBlacklist() {
         require(!blacklist[msg.sender], "invalid user");
         _;
+    }
+
+    struct TokenInfo {
+        uint256 tokenID;
+        string tokenURI;
     }
 
     constructor(
@@ -51,7 +55,10 @@ contract NFTMIR is
 
     // recharge
     function recharge(uint userid, uint amount) external onlyNotBlacklist {
-        require(amount > 0 && usdt.balanceOf(msg.sender) >= amount, "invalid amount");
+        require(
+            amount > 0 && usdt.balanceOf(msg.sender) >= amount,
+            "invalid amount"
+        );
         // record total recharge amount of userid
         totalRechargeOfUserid[userid] += amount;
         // record total recharge amount of current address
@@ -79,15 +86,20 @@ contract NFTMIR is
     }
 
     // get user waiting for redeem
-    function getWaitingForRedeem(address user) public view returns (uint[] memory) {
+    function getWaitingForRedeem(
+        address user
+    ) public view returns (uint[] memory) {
         return waitingForRedeem[user];
     }
 
-    function findWaitingForRedeemIndex(address user, uint tokenId) public view returns (int) {
+    function _findWaitingForRedeemIndex(
+        address user,
+        uint tokenId
+    ) private view returns (int) {
         uint[] storage waitingForRedeemArray = waitingForRedeem[user];
         for (uint256 i = 0; i < waitingForRedeemArray.length; i++) {
             if (waitingForRedeemArray[i] == tokenId) {
-                return i;
+                return int(i);
             }
         }
         return -1;
@@ -97,22 +109,39 @@ contract NFTMIR is
     function redeem(uint tokenId, string memory uri) external onlyNotBlacklist {
         // remove from waiting for redeem
         uint[] storage waitingForRedeemArray = waitingForRedeem[msg.sender];
-        if(waitingForRedeemArray.length > 0) {
-            int index = findWaitingForRedeemIndex(msg.sender, tokenId);
-            if(index > -1) {
-                    waitingForRedeemArray[uint(index)] = waitingForRedeemArray[waitingForRedeemArray.length - 1];
-                    waitingForRedeemArray.pop();
-                    _safeMint(msg.sender, tokenId);
-                    _setTokenURI(tokenId, uri);
-                    emit Redeem(tokenId, waitingForRedeemArray);
-                    break;
-                }
+        if (waitingForRedeemArray.length > 0) {
+            int index = _findWaitingForRedeemIndex(msg.sender, tokenId);
+            if (index > -1) {
+                waitingForRedeemArray[uint(index)] = waitingForRedeemArray[
+                    waitingForRedeemArray.length - 1
+                ];
+                waitingForRedeemArray.pop();
+                _safeMint(msg.sender, tokenId);
+                _setTokenURI(tokenId, uri);
+                emit Redeem(tokenId, waitingForRedeemArray);
+            } else {
+                revert("invalid tokenId");
             }
         } else {
-            revert("invalid tokenId");
+            revert("no waiting for redeem");
         }
     }
 
+    function getTokensWithURI(
+        address owner
+    ) external view returns (TokenInfo[] memory) {
+        uint256 balance = balanceOf(owner);
+        TokenInfo[] memory tokens = new TokenInfo[](balance);
+        for (uint256 i = 0; i < balance; i++) {
+            uint256 tokenId = tokenOfOwnerByIndex(owner, i);
+            tokens[i] = TokenInfo({
+                tokenID: tokenId,
+                tokenURI: tokenURI(tokenId)
+            });
+        }
+        return tokens;
+    }
+    
     // Withdraw To Owner,TODO: after add staking reward (warn reentrancy)
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
@@ -121,7 +150,7 @@ contract NFTMIR is
 
     // set blacklist
     function setBlacklist(address user, bool isBlacklist) external onlyOwner {
-        if(user == owner()) revert("owner can't be blacklisted");
+        if (user == owner()) revert("owner can't be blacklisted");
         blacklist[user] = isBlacklist;
     }
 
