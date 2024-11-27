@@ -43,30 +43,30 @@ contract NFTMIR is
 
     // getNFT URI
     function tokenURI(
-        uint256 tokenId
+        uint256 _tokenId
     ) public view override(ERC721URIStorage, ERC721) returns (string memory) {
-        return super.tokenURI(tokenId);
+        return super.tokenURI(_tokenId);
     }
 
     // set NFT URI
-    function setTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
-        _setTokenURI(tokenId, uri);
+    function setTokenURI(uint256 _tokenId, string memory _uri) public onlyOwner {
+        _setTokenURI(_tokenId, _uri);
     }
 
     // recharge
-    function recharge(uint userid, uint amount) external onlyNotBlacklist {
+    function recharge(uint _userid, uint _amount) external onlyNotBlacklist {
         require(
-            amount > 0 && usdt.balanceOf(msg.sender) >= amount,
+            _amount > 0 && usdt.balanceOf(msg.sender) >= _amount,
             "invalid amount"
         );
         // record total recharge amount of userid
-        totalRechargeOfUserid[userid] += amount;
+        totalRechargeOfUserid[_userid] += _amount;
         // record total recharge amount of current address
-        totalRechargeOfAddress[msg.sender] += amount;
+        totalRechargeOfAddress[msg.sender] += _amount;
         // record available for mint
-        availableForMint[msg.sender] += amount;
+        availableForMint[msg.sender] += _amount;
         // transfer USDT from user to owner
-        usdt.transferFrom(msg.sender, address(this), amount);
+        usdt.transferFrom(msg.sender, address(this), _amount);
         // calculate mintable NFTs count
         uint256 mintableNFTsCount = availableForMint[msg.sender] / mintPrice;
         // mint NFT and record waiting for redeem
@@ -87,18 +87,18 @@ contract NFTMIR is
 
     // get user waiting for redeem
     function getWaitingForRedeem(
-        address user
+        address _user
     ) public view returns (uint[] memory) {
-        return waitingForRedeem[user];
+        return waitingForRedeem[_user];
     }
 
     function _findWaitingForRedeemIndex(
-        address user,
-        uint tokenId
+        address _user,
+        uint _tokenId
     ) private view returns (int) {
-        uint[] storage waitingForRedeemArray = waitingForRedeem[user];
+        uint[] storage waitingForRedeemArray = waitingForRedeem[_user];
         for (uint256 i = 0; i < waitingForRedeemArray.length; i++) {
-            if (waitingForRedeemArray[i] == tokenId) {
+            if (waitingForRedeemArray[i] == _tokenId) {
                 return int(i);
             }
         }
@@ -106,19 +106,19 @@ contract NFTMIR is
     }
 
     // user redeem
-    function redeem(uint tokenId, string memory uri) external onlyNotBlacklist {
+    function redeem(uint _tokenId, string memory _uri) external onlyNotBlacklist {
         // remove from waiting for redeem
         uint[] storage waitingForRedeemArray = waitingForRedeem[msg.sender];
         if (waitingForRedeemArray.length > 0) {
-            int index = _findWaitingForRedeemIndex(msg.sender, tokenId);
+            int index = _findWaitingForRedeemIndex(msg.sender, _tokenId);
             if (index > -1) {
                 waitingForRedeemArray[uint(index)] = waitingForRedeemArray[
                     waitingForRedeemArray.length - 1
                 ];
                 waitingForRedeemArray.pop();
-                _safeMint(msg.sender, tokenId);
-                _setTokenURI(tokenId, uri);
-                emit Redeem(tokenId, waitingForRedeemArray);
+                _safeMint(msg.sender, _tokenId);
+                _setTokenURI(_tokenId, _uri);
+                emit Redeem(_tokenId, waitingForRedeemArray);
             } else {
                 revert("invalid tokenId");
             }
@@ -128,12 +128,12 @@ contract NFTMIR is
     }
 
     function getTokensWithURI(
-        address owner
+        address _owner
     ) external view returns (TokenInfo[] memory) {
-        uint256 balance = balanceOf(owner);
+        uint256 balance = balanceOf(_owner);
         TokenInfo[] memory tokens = new TokenInfo[](balance);
         for (uint256 i = 0; i < balance; i++) {
-            uint256 tokenId = tokenOfOwnerByIndex(owner, i);
+            uint256 tokenId = tokenOfOwnerByIndex(_owner, i);
             tokens[i] = TokenInfo({
                 tokenID: tokenId,
                 tokenURI: tokenURI(tokenId)
@@ -141,7 +141,7 @@ contract NFTMIR is
         }
         return tokens;
     }
-    
+
     // Withdraw To Owner,TODO: after add staking reward (warn reentrancy)
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
@@ -149,37 +149,42 @@ contract NFTMIR is
     }
 
     // set blacklist
-    function setBlacklist(address user, bool isBlacklist) external onlyOwner {
-        if (user == owner()) revert("owner can't be blacklisted");
-        blacklist[user] = isBlacklist;
+    function setBlacklist(address _user, bool _isBlacklist) external onlyOwner {
+        if (_user == owner()) revert("owner can't be blacklisted");
+        blacklist[_user] = _isBlacklist;
+    }
+
+    // block timestamp
+    function blockTimestamp() external view returns (uint256) {
+        return block.timestamp;
     }
 
     // update NFT
     function _update(
-        address to,
-        uint256 tokenId,
-        address auth
+        address _to,
+        uint256 _tokenId,
+        address _auth
     ) internal override(ERC721, ERC721Enumerable) returns (address) {
-        return super._update(to, tokenId, auth);
+        return super._update(_to, _tokenId, _auth);
     }
 
     // increase balance
     function _increaseBalance(
-        address account,
-        uint128 value
+        address _account,
+        uint128 _value
     ) internal override(ERC721, ERC721Enumerable) {
-        super._increaseBalance(account, value);
+        super._increaseBalance(_account, _value);
     }
 
     // support interface
     function supportsInterface(
-        bytes4 interfaceId
+        bytes4 _interfaceId
     )
         public
         view
         override(ERC721, ERC721Enumerable, ERC721URIStorage)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return super.supportsInterface(_interfaceId);
     }
 }
