@@ -9,6 +9,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "./interfaces/INFTMIR.sol";
 
+uint8 constant USDT_DECIMALS = 6;
+
 contract NFTMIR is
     ERC721,
     ERC721Enumerable,
@@ -18,7 +20,7 @@ contract NFTMIR is
 {
     uint16 public nftTokenId;
     IERC20 public usdt;
-    uint256 constant mintPrice = 10 * 10 ** 18;
+    uint256 constant mintPrice = 10 * 10 ** USDT_DECIMALS;
     mapping(address => bool) public blacklist;
     mapping(uint => uint) public totalRechargeOfUserid;
     mapping(address => uint) public totalRechargeOfAddress;
@@ -82,7 +84,7 @@ contract NFTMIR is
             // update available for mint
             availableForMint[msg.sender] %= mintPrice;
         }
-        emit Recharge(userid, msg.sender, amount, mintableTokenIds);
+        emit Recharge(_userid, msg.sender, _amount, mintableTokenIds);
     }
 
     // get user waiting for redeem
