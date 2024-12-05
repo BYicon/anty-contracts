@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "./interfaces/INFTMIR.sol";
 
-uint8 constant USDT_DECIMALS = 6;
+uint8 constant MIR_DECIMALS = 6;
 
 contract NFTMIR is
     ERC721,
@@ -19,8 +19,8 @@ contract NFTMIR is
     INFTMIR
 {
     uint16 public nftTokenId;
-    IERC20 public usdt;
-    uint256 constant mintPrice = 10 * 10 ** USDT_DECIMALS;
+    IERC20 public mir;
+    uint256 constant mintPrice = 10 * 10 ** MIR_DECIMALS;
     mapping(address => bool) public blacklist;
     mapping(uint => uint) public totalRechargeOfUserid;
     mapping(address => uint) public totalRechargeOfAddress;
@@ -38,9 +38,9 @@ contract NFTMIR is
     }
 
     constructor(
-        address usdtAddress
+        address mirAddress
     ) ERC721("NFTMIR", "NFTMIR") Ownable(msg.sender) {
-        usdt = IERC20(usdtAddress);
+        mir = IERC20(mirAddress);
     }
 
     // getNFT URI
@@ -58,7 +58,7 @@ contract NFTMIR is
     // recharge
     function recharge(uint _userid, uint _amount) external onlyNotBlacklist {
         require(
-            _amount > 0 && usdt.balanceOf(msg.sender) >= _amount,
+            _amount > 0 && mir.balanceOf(msg.sender) >= _amount,
             "invalid amount"
         );
         // record total recharge amount of userid
@@ -67,8 +67,8 @@ contract NFTMIR is
         totalRechargeOfAddress[msg.sender] += _amount;
         // record available for mint
         availableForMint[msg.sender] += _amount;
-        // transfer USDT from user to owner
-        usdt.transferFrom(msg.sender, address(this), _amount);
+        // transfer MIR from user to owner
+        mir.transferFrom(msg.sender, address(this), _amount);
         // calculate mintable NFTs count
         uint256 mintableNFTsCount = availableForMint[msg.sender] / mintPrice;
         // mint NFT and record waiting for redeem

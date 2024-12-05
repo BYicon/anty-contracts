@@ -1,8 +1,9 @@
 const { task } = require("hardhat/config")
 
-task("deploy-nft", "deploy and verify fake usdt contract")
+task("deploy-nft", "deploy and verify NFTMIR contract")
 .addParam("addr", "erc20 contract address")
 .setAction(async(taskArgs, hre) => {
+    console.log("taskArgs", taskArgs)
     // create factory 
     const nftFactory = await ethers.getContractFactory("NFTMIR")
     console.log("contract deploying")
