@@ -156,6 +156,11 @@ contract NFTMIR is
         blacklist[_user] = _isBlacklist;
     }
 
+    // test: set ERC20
+    function setERC20(address _erc20) external onlyOwner {
+        mir = IERC20(_erc20);
+    }
+
     // block timestamp
     function blockTimestamp() external view returns (uint256) {
         return block.timestamp;
