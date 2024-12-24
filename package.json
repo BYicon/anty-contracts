@@ -6,6 +6,7 @@
   "license": "MIT",
   "scripts": {
     "remixd": "remixd -s . --remix-ide https://remix.ethereum.org",
+    "compile": "npx hardhat compile",
     "flatten": "npx hardhat flatten",
     "deploy-mir": "npx hardhat deploy-mir --network sepolia",
     "deploy-nft": "npx hardhat deploy-nft --network sepolia"
