@@ -11,11 +11,11 @@ NFT market
 
 ## 部署
 
-### 编译合约
-`npx hardhat compile`
-
 ### 可能需要先输入设置的env-enc密码，不需要忽略此步骤
 `npx env-enc set-pw`
+
+### 编译合约
+`npx hardhat compile`
 
 ### 部署ERC20
 `npx hardhat deploy-mir --network sepolia`

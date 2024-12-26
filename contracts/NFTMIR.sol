@@ -129,19 +129,19 @@ contract NFTMIR is
         }
     }
 
-    function getTokensWithURI(
+    function getNFTsByUser(
         address _owner
     ) external view returns (TokenInfo[] memory) {
         uint256 balance = balanceOf(_owner);
-        TokenInfo[] memory tokens = new TokenInfo[](balance);
+        TokenInfo[] memory nfts = new TokenInfo[](balance);
         for (uint256 i = 0; i < balance; i++) {
             uint256 tokenId = tokenOfOwnerByIndex(_owner, i);
-            tokens[i] = TokenInfo({
+            nfts[i] = TokenInfo({
                 tokenID: tokenId,
                 tokenURI: tokenURI(tokenId)
             });
         }
-        return tokens;
+        return nfts;
     }
 
     // Withdraw To Owner,TODO: after add staking reward (warn reentrancy)
