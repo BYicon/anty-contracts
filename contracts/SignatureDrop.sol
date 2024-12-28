@@ -15,20 +15,22 @@ contract SignatureDrop is Ownable {
     address public immutable token;
     address public signer;
     mapping(uint256 => bool) public usedNonces;
+    mapping(address => bool) public claims;
 
     event Claimed(address to, uint256 amount, uint256 nonce);
 
     error NonceUsed();
     error Expired();
     error InvalidSignature();
+    error AlreadyClaimed();
 
-    constructor(address token_, address signer_) Ownable(msg.sender) {
-        token = token_;
-        signer = signer_;
+    constructor(address _token) Ownable(msg.sender) {
+        token = _token;
+        signer = msg.sender;
     }
 
-    function updateSigner(address signer_) external onlyOwner {
-        signer = signer_;
+    function updateSigner(address _signer) external onlyOwner {
+        signer = _signer;
     }
 
     function claimRestTokens(address to) external onlyOwner {
@@ -37,49 +39,50 @@ contract SignatureDrop is Ownable {
     }
 
     function claim(
-        address to,
-        uint256 amount,
-        uint256 nonce,
-        uint256 expireAt,
-        bytes memory signature
+        address _to,
+        uint256 _amount,
+        uint256 _nonce,
+        uint256 _deadline,
+        bytes memory _signature
     ) external {
-        if (usedNonces[nonce]) revert NonceUsed();
-        if (expireAt < block.timestamp) revert Expired();
-
-        if (!verifySignature(to, amount, nonce, expireAt, signature))
+        if (claims[msg.sender]) revert AlreadyClaimed();
+        if (usedNonces[_nonce]) revert NonceUsed();
+        if (_deadline < block.timestamp) revert Expired();
+        if (!verifySignature(_to, _amount, _nonce, _deadline, _signature))
             revert InvalidSignature();
 
-        usedNonces[nonce] = true;
-        IERC20(token).safeTransfer(to, amount);
+        usedNonces[_nonce] = true;
+        claims[_to] = true;
+        IERC20(token).safeTransfer(_to, _amount);
 
-        emit Claimed(to, amount, nonce);
+        emit Claimed(_to, _amount, _nonce);
     }
 
     function verifySignature(
-        address to,
-        uint256 amount,
-        uint256 nonce,
-        uint256 expireAt,
-        bytes memory signature
+        address _to,
+        uint256 _amount,
+        uint256 _nonce,
+        uint256 _deadline,
+        bytes memory _signature
     ) public view returns (bool) {
-        bytes32 messageHash = getMessageHash(to, amount, nonce, expireAt);
-        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
-        address recovered = ethSignedMessageHash.recover(signature);
-        return recovered == signer;
+        bytes32 _messageHash = getMessageHash(_to, _amount, _nonce, _deadline);
+        bytes32 _ethSignedMessageHash = getEthSignedMessageHash(_messageHash);
+        address _recovered = _ethSignedMessageHash.recover(_signature);
+        return _recovered == signer;
     }
 
     function getMessageHash(
-        address to,
-        uint256 amount,
-        uint256 nonce,
-        uint256 expireAt
+        address _to,
+        uint256 _amount,
+        uint256 _nonce,
+        uint256 _deadline
     ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(to, amount, nonce, expireAt));
+        return keccak256(abi.encodePacked(_to, _amount, _nonce, _deadline));
     }
 
     function getEthSignedMessageHash(
-        bytes32 messageHash
+        bytes32 _messageHash
     ) public pure returns (bytes32) {
-        return messageHash.toEthSignedMessageHash();
+        return _messageHash.toEthSignedMessageHash();
     }
 }
