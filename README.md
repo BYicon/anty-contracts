@@ -25,3 +25,7 @@ NFT market
 
 ### 部署airdrop  --addr 是ERC20的地址
 `npx hardhat deploy-airdrop --network sepolia --addr ${ERC20_ADDRESS}`
+
+
+### 部署mock token
+`npx hardhat deploy-mock --network sepolia`

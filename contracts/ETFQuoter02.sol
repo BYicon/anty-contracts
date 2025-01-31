@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {IETFQuoter02} from "./interfaces/IETFQuoter02.sol";
 import {ETFQuoter} from "./ETFQuoter.sol";
 import {IETFv3} from "./interfaces/IETFv3.sol";
-import {IERC20} from "@openzeppelin/contracts@5.1.0/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract ETFQuoter02 is IETFQuoter02, ETFQuoter {
     constructor(

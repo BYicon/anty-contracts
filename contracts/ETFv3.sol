@@ -6,8 +6,8 @@ import {IETFv3} from "./interfaces/IETFv3.sol";
 import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
 import {IETFQuoter} from "./interfaces/IETFQuoter.sol";
 import {FullMath} from "./libraries/FullMath.sol";
-import {IERC20} from "@openzeppelin/contracts@5.1.0/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts@5.1.0/interfaces/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {IV3SwapRouter} from "./interfaces/IV3SwapRouter.sol";
 
 contract ETFv3 is IETFv3, ETFv2 {
