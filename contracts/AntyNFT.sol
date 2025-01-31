@@ -7,20 +7,20 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "./interfaces/INFTMIR.sol";
+import "./interfaces/IAntyNFT.sol";
 
-uint8 constant MIR_DECIMALS = 6;
+uint8 constant ANTY_DECIMALS = 6;
 
-contract NFTMIR is
+contract AntyNFT is
     ERC721,
     ERC721Enumerable,
     ERC721URIStorage,
     Ownable,
-    INFTMIR
+    IAntyNFT
 {
     uint16 public nftTokenId;
-    IERC20 public mir;
-    uint256 constant mintPrice = 10 * 10 ** MIR_DECIMALS;
+    IERC20 public antyERC20;
+    uint256 constant mintPrice = 10 * 10 ** ANTY_DECIMALS;
     mapping(address => bool) public blacklist;
     mapping(uint => uint) public totalRechargeOfUserid;
     mapping(address => uint) public totalRechargeOfAddress;
@@ -38,9 +38,9 @@ contract NFTMIR is
     }
 
     constructor(
-        address mirAddress
-    ) ERC721("NFTMIR", "NFTMIR") Ownable(msg.sender) {
-        mir = IERC20(mirAddress);
+        address _antyERC20Address
+    ) ERC721("AntyNFT", "ANTYNFT") Ownable(msg.sender) {
+        antyERC20 = IERC20(_antyERC20Address);
     }
 
     // getNFT URI
@@ -58,7 +58,7 @@ contract NFTMIR is
     // recharge
     function recharge(uint _userid, uint _amount) external onlyNotBlacklist {
         require(
-            _amount > 0 && mir.balanceOf(msg.sender) >= _amount,
+            _amount > 0 && antyERC20.balanceOf(msg.sender) >= _amount,
             "invalid amount"
         );
         // record total recharge amount of userid
@@ -67,8 +67,8 @@ contract NFTMIR is
         totalRechargeOfAddress[msg.sender] += _amount;
         // record available for mint
         availableForMint[msg.sender] += _amount;
-        // transfer MIR from user to owner
-        mir.transferFrom(msg.sender, address(this), _amount);
+        // transfer ANTY from user to owner
+        antyERC20.transferFrom(msg.sender, address(this), _amount);
         // calculate mintable NFTs count
         uint256 mintableNFTsCount = availableForMint[msg.sender] / mintPrice;
         // mint NFT and record waiting for redeem
@@ -158,7 +158,7 @@ contract NFTMIR is
 
     // test: set ERC20
     function setERC20(address _erc20) external onlyOwner {
-        mir = IERC20(_erc20);
+        antyERC20 = IERC20(_erc20);
     }
 
     // block timestamp

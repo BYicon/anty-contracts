@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface INFTMIR {
+interface IAntyNFT {
     event Recharge(uint indexed userid,address indexed user, uint indexed amount, uint[] mintableTokenIds);
     event Withdraw(uint indexed amount);
     event Redeem(uint indexed tokenId, uint[] tokenIds);

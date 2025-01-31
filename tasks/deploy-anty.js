@@ -1,11 +1,9 @@
-const { task } = require("hardhat/config");
+const { task, run } = require("hardhat/config");
 
-task("deploy-mir", "deploy and verify MirrorToken contract").setAction(
+task("deploy-anty", "deploy and verify AntyToken contract").setAction(
   async (taskArgs, hre) => {
-    // const sender = await ethers.getSigners();
-    // console.log("sender 🚀🚀🚀", sender);
     // create factory
-    const mirFactory = await ethers.getContractFactory("MIR");
+    const mirFactory = await ethers.getContractFactory("Anty");
     console.log("contract deploying");
     // deploy
     const mir = await mirFactory.deploy(1000000000000000);
@@ -28,7 +26,7 @@ task("deploy-mir", "deploy and verify MirrorToken contract").setAction(
 );
 
 async function verifyMIR(mirAddr, args) {
-  await hre.run("verify:verify", {
+  await run("verify:verify", {
     address: mirAddr,
     constructorArguments: args,
   });

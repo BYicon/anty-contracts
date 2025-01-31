@@ -1,3 +1,5 @@
-exports.deployConract = require("./deploy-mir")
+exports.deployAnty = require("./deploy-anty")
 exports.deployNFT = require("./deploy-nft")
 exports.deployAirdrop = require("./deploy-airdrop")
+exports.deployMock = require("./deploy-mock")
+exports.deployETF = require("./deploy-etf")

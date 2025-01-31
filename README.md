@@ -29,3 +29,7 @@ NFT market
 
 ### 部署mock token
 `npx hardhat deploy-mock --network sepolia`
+
+### 部署ETF
+`npx hardhat deploy-etf --network sepolia`
+

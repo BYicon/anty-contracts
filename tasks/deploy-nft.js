@@ -5,7 +5,7 @@ task("deploy-nft", "deploy and verify NFTMIR contract")
 .setAction(async(taskArgs, hre) => {
     console.log("taskArgs", taskArgs)
     // create factory 
-    const nftFactory = await ethers.getContractFactory("NFTMIR")
+    const nftFactory = await ethers.getContractFactory("ANTYNFT")
     console.log("contract deploying")
     const nft = await nftFactory.deploy(taskArgs.addr)
     await nft.waitForDeployment()

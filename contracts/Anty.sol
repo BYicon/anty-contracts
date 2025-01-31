@@ -12,7 +12,7 @@ contract MIR is ERC20, Ownable, ERC20Permit {
 
     constructor(
         uint256 initialSupply
-    ) ERC20("MirrorToken", "MIR") Ownable(msg.sender) ERC20Permit("MirrorToken") {
+    ) ERC20("AntyToken", "ANTY") Ownable(msg.sender) ERC20Permit("AntyToken") {
         _mint(msg.sender, initialSupply);
     }
 
