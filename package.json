@@ -10,7 +10,8 @@
     "flatten": "npx hardhat flatten",
     "deploy-mir": "npx hardhat deploy-mir --network sepolia",
     "deploy-nft": "npx hardhat deploy-nft --network sepolia",
-    "deploy-airdrop": "npx hardhat deploy-airdrop --network sepolia"
+    "deploy-airdrop": "npx hardhat deploy-airdrop --network sepolia",
+    "deploy-etf": "npx hardhat deploy-etf --network sepolia"
   },
   "devDependencies": {
     "@chainlink/env-enc": "1.0.5",

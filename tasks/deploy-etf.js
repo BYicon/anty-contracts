@@ -15,7 +15,7 @@ task("deploy-etf", "deploy and verify ETF contract").setAction(
       "0xBea1F36b96C21D0cB3890a43Fd23a3aaF5d1a623",
       "0x72D8f66C0De729548257e3F534c0595c49f0Dc2B",
       "0x731547Af3879aa3892A0a36BE718a639000a0335",
-      "0x8700bb76B942616118BfEd1f1970f0aE60C850Ec",
+      // "0x8700bb76B942616118BfEd1f1970f0aE60C850Ec",
     ];
 
     // btc 100000, eth 3100, link 23, aud 0.6
