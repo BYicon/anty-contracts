@@ -167,7 +167,6 @@ contract ETFv1 is IETFv1, ERC20, Ownable {
         emit Redeemed(msg.sender, to, burnAmount, fee, tokenAmounts);
     }
 
-    /// use for v3
     function _addToken(address token) internal returns (uint256 index) {
         for (uint256 i = 0; i < _tokens.length; i++) {
             if (_tokens[i] == token) revert TokenExists();
